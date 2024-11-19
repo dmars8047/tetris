@@ -152,8 +152,10 @@ int main()
     const int maxRotationDelta = 100;
     int rotationDelta = maxRotationDelta;
     const int maxMovementDelta = 100;
+    int downwardMovementMultiplier = 1;
     int movementDelta = maxMovementDelta;
 
+    SDL_Keycode lastUsedKey;
     Board *p_Board = new Board();
     Tetromino *p_Tetromino = new Tetromino((TetrominoType)typeNum);
 
@@ -169,6 +171,7 @@ int main()
                 int typeNum = dist7(rng);
                 p_Tetromino = new Tetromino((TetrominoType)typeNum);
                 roundDelta = 0;
+                downwardMovementMultiplier = 1;
             }
 
             if (roundDelta >= roundMax)
@@ -195,6 +198,7 @@ int main()
                         break;
                     case SDLK_UP:
                     case SDLK_w:
+                        lastUsedKey = SDLK_UP;
                         if (rotationDelta >= maxRotationDelta)
                         {
                             p_Tetromino->Rotate(p_Board);
@@ -214,9 +218,20 @@ int main()
 
                             movementDelta = 0;
                         }
+
+                        if (lastUsedKey == SDLK_DOWN)
+                        {
+                            downwardMovementMultiplier = 2;
+                        }
+                        else
+                        {
+                            lastUsedKey = SDLK_DOWN;
+                        }
+
                         break;
                     case SDLK_RIGHT:
                     case SDLK_d:
+                        lastUsedKey = SDLK_RIGHT;
                         if (movementDelta >= maxMovementDelta)
                         {
                             p_Tetromino->MoveRight(p_Board);
@@ -225,6 +240,7 @@ int main()
                         break;
                     case SDLK_LEFT:
                     case SDLK_a:
+                        lastUsedKey = SDLK_LEFT;
                         if (movementDelta >= maxMovementDelta)
                         {
                             p_Tetromino->MoveLeft(p_Board);
@@ -232,8 +248,21 @@ int main()
                         }
                         break;
                     default:
+                        lastUsedKey = SDLK_UNKNOWN;
                         break;
                     }
+                }
+                else
+                {
+                    if (lastUsedKey == SDLK_DOWN)
+                    {
+                        lastUsedKey == SDLK_UNKNOWN;
+                    }
+                }
+
+                if (lastUsedKey != SDLK_DOWN)
+                {
+                    downwardMovementMultiplier = 1;
                 }
             }
 
@@ -254,7 +283,7 @@ int main()
 
             if (movementDelta < maxMovementDelta)
             {
-                movementDelta += timer.GetDeltaMilliSeconds();
+                movementDelta += timer.GetDeltaMilliSeconds() * downwardMovementMultiplier;
             }
         }
     }
