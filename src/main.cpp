@@ -163,6 +163,7 @@ int main()
 
             if (p_Tetromino->GetIsLanded())
             {
+                p_Board->ClearCompletedRows();
                 int typeNum = dist7(rng);
                 p_Tetromino = new Tetromino((TetrominoType)typeNum);
                 roundDelta = 0;
@@ -171,7 +172,7 @@ int main()
             if (roundDelta >= roundMax)
             {
                 p_Tetromino->MoveDown(p_Board);
-                roundDelta = 0;
+                roundDelta = roundMax - roundDelta;
             }
 
             // Handle events on queue

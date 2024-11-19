@@ -81,3 +81,48 @@ void Board::Render(SDL_Renderer *renderer) const
 
     SDL_RenderFillRects(renderer, rects, numRects);
 }
+
+void Board::ClearCompletedRows()
+{
+    // Create a map to count the blocks in each row
+    std::unordered_map<int, int> rowCount;
+
+    // Count the number of blocks in each row
+    for (const Block &block : m_Blocks)
+    {
+        rowCount[block.GetPosition_Y()]++;
+    }
+
+    // Collect all rows with exactly 10 blocks
+    std::vector<int> fullRows;
+    for (const auto &[row, count] : rowCount)
+    {
+        if (count == 10)
+        {
+            fullRows.push_back(row);
+        }
+    }
+
+    // Sort the rows in descending order
+    std::sort(fullRows.begin(), fullRows.end());
+
+    // Remove full rows and adjust rows above
+    for (int row : fullRows)
+    {
+        // Remove all blocks in the current row
+        m_Blocks.erase(
+            std::remove_if(m_Blocks.begin(), m_Blocks.end(),
+                           [row](const Block &block)
+                           { return block.GetPosition_Y() == row; }),
+            m_Blocks.end());
+
+        // Lower the row value of all blocks above the removed row
+        for (auto &block : m_Blocks)
+        {
+            if (block.GetPosition_Y() < row)
+            {
+                block.SetPosition(block.GetPosition_X(), block.GetPosition_Y() + BLOCK_SIZE);
+            }
+        }
+    }
+}

@@ -12,6 +12,7 @@ public:
     bool IsColliding(int x, int y) const;
     void AddBlock(Block block);
     void Render(SDL_Renderer *g_Renderer) const;
+    void ClearCompletedRows();
 private:
     int m_Min_X;
     int m_Max_X;
