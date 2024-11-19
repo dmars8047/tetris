@@ -25,6 +25,8 @@ void Tetromino::Render(SDL_Renderer *renderer) const
         return;
     }
 
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, BACKGROUND_ALPHA);
+
     SDL_Rect rect_0 = m_Blocks.at(0).GetRenderRect();
     SDL_Rect rect_1 = m_Blocks.at(1).GetRenderRect();
     SDL_Rect rect_2 = m_Blocks.at(2).GetRenderRect();

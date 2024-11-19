@@ -149,8 +149,10 @@ int main()
     std::uniform_int_distribution<std::mt19937::result_type> dist7(0, 6);
     int typeNum = dist7(rng);
 
-    int rotationDelta = 100;
-    int movementDelta = 100;
+    const int maxRotationDelta = 100;
+    int rotationDelta = maxRotationDelta;
+    const int maxMovementDelta = 100;
+    int movementDelta = maxMovementDelta;
 
     Board *p_Board = new Board();
     Tetromino *p_Tetromino = new Tetromino((TetrominoType)typeNum);
@@ -192,14 +194,16 @@ int main()
                         quit = true;
                         break;
                     case SDLK_UP:
-                        if (rotationDelta >= 100)
+                    case SDLK_w:
+                        if (rotationDelta >= maxRotationDelta)
                         {
                             p_Tetromino->Rotate(p_Board);
                             rotationDelta = 0;
                         }
                         break;
                     case SDLK_DOWN:
-                        if (movementDelta >= 100)
+                    case SDLK_s:
+                        if (movementDelta >= maxMovementDelta)
                         {
                             p_Tetromino->MoveDown(p_Board);
 
@@ -212,14 +216,16 @@ int main()
                         }
                         break;
                     case SDLK_RIGHT:
-                        if (movementDelta >= 100)
+                    case SDLK_d:
+                        if (movementDelta >= maxMovementDelta)
                         {
                             p_Tetromino->MoveRight(p_Board);
                             movementDelta = 0;
                         }
                         break;
                     case SDLK_LEFT:
-                        if (movementDelta >= 100)
+                    case SDLK_a:
+                        if (movementDelta >= maxMovementDelta)
                         {
                             p_Tetromino->MoveLeft(p_Board);
                             movementDelta = 0;
@@ -236,20 +242,17 @@ int main()
             SDL_RenderClear(g_Renderer);
 
             p_Board->Render(g_Renderer);
-
-            SDL_SetRenderDrawColor(g_Renderer, 0, 255, 0, BACKGROUND_ALPHA);
-
             p_Tetromino->Render(g_Renderer);
 
             SDL_RenderPresent(g_Renderer);
             roundDelta += timer.GetDeltaMilliSeconds();
 
-            if (rotationDelta < 100)
+            if (rotationDelta < maxRotationDelta)
             {
                 rotationDelta += timer.GetDeltaMilliSeconds();
             }
 
-            if (movementDelta < 100)
+            if (movementDelta < maxMovementDelta)
             {
                 movementDelta += timer.GetDeltaMilliSeconds();
             }
