@@ -1,4 +1,8 @@
+#if __APPLE__
+#include <SDL.h>
+#elif
 #include <SDL2/SDL.h>
+#endif
 #include <iostream>
 
 #include "timer.hpp"

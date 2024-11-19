@@ -1,13 +1,22 @@
 #include <iostream>
+#include <random>
 
+#if __APPLE__
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#include <SDL_mixer.h>
+#elif
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
+#endif
 
 #include "timer.hpp"
 #include "constants.hpp"
 #include "block.hpp"
+#include "board.hpp"
 #include "tetromino.hpp"
 
 SDL_Window *g_MainWindow = NULL;
@@ -118,37 +127,6 @@ void destroy_SDL()
     SDL_Quit();
 }
 
-void drawBoard()
-{
-    // Draw the grid
-    SDL_SetRenderDrawColor(g_Renderer, 51, 51, 51, 0);
-
-    // Draw vertical grid lines
-    for (int x = BLOCK_SIZE * 2; x < WINDOW_WIDTH - (BLOCK_SIZE); x += BLOCK_SIZE)
-    {
-        SDL_RenderDrawLine(g_Renderer, x, BLOCK_SIZE, x, WINDOW_HEIGHT - BLOCK_SIZE);
-    }
-
-    // Draw horizontal grid lines
-    for (int y = BLOCK_SIZE * 2; y < WINDOW_HEIGHT - (BLOCK_SIZE); y += BLOCK_SIZE)
-    {
-        SDL_RenderDrawLine(g_Renderer, BLOCK_SIZE, y, WINDOW_WIDTH - BLOCK_SIZE, y);
-    }
-
-    // Draw the border of the board
-    SDL_SetRenderDrawColor(g_Renderer, 255, 255, 255, 0);
-
-    SDL_Point boardPoints[] = {
-        SDL_Point{x : BLOCK_SIZE, y : BLOCK_SIZE},
-        SDL_Point{x : BLOCK_SIZE, y : WINDOW_HEIGHT - BLOCK_SIZE},
-        SDL_Point{x : WINDOW_WIDTH - BLOCK_SIZE, y : WINDOW_HEIGHT - BLOCK_SIZE},
-        SDL_Point{x : WINDOW_WIDTH - BLOCK_SIZE, y : BLOCK_SIZE},
-        SDL_Point{x : BLOCK_SIZE, y : BLOCK_SIZE}};
-
-    // Draw the board
-    SDL_RenderDrawLines(g_Renderer, boardPoints, 5);
-}
-
 int main()
 {
     if (!initSDL())
@@ -163,12 +141,19 @@ int main()
     SDL_Event e;
     Timer timer = Timer();
     int roundDelta = 0;
-    int roundMax = 100000;
+    int roundMax = 1000;
+
+    // Random number generation
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist7(0, 6);
+    int typeNum = dist7(rng);
 
     int rotationDelta = 100;
     int movementDelta = 100;
 
-    Tetromino *p_Tetromino = new Tetromino(TetrominoType::Z);
+    Board *p_Board = new Board();
+    Tetromino *p_Tetromino = new Tetromino((TetrominoType)typeNum);
 
     try
     {
@@ -176,9 +161,16 @@ int main()
         {
             timer.StartNewFrame();
 
+            if (p_Tetromino->GetIsLanded())
+            {
+                int typeNum = dist7(rng);
+                p_Tetromino = new Tetromino((TetrominoType)typeNum);
+                roundDelta = 0;
+            }
+
             if (roundDelta >= roundMax)
             {
-                p_Tetromino->MoveDown();
+                p_Tetromino->MoveDown(p_Board);
                 roundDelta = 0;
             }
 
@@ -201,29 +193,34 @@ int main()
                     case SDLK_UP:
                         if (rotationDelta >= 100)
                         {
-                            p_Tetromino->Rotate();
+                            p_Tetromino->Rotate(p_Board);
                             rotationDelta = 0;
                         }
                         break;
                     case SDLK_DOWN:
                         if (movementDelta >= 100)
                         {
-                            p_Tetromino->MoveDown();
-                            roundDelta = 0;
+                            p_Tetromino->MoveDown(p_Board);
+
+                            if (!p_Tetromino->GetIsLanded())
+                            {
+                                roundDelta = 0;
+                            }
+
                             movementDelta = 0;
                         }
                         break;
                     case SDLK_RIGHT:
                         if (movementDelta >= 100)
                         {
-                            p_Tetromino->MoveRight();
+                            p_Tetromino->MoveRight(p_Board);
                             movementDelta = 0;
                         }
                         break;
                     case SDLK_LEFT:
                         if (movementDelta >= 100)
                         {
-                            p_Tetromino->MoveLeft();
+                            p_Tetromino->MoveLeft(p_Board);
                             movementDelta = 0;
                         }
                         break;
@@ -237,7 +234,7 @@ int main()
             SDL_SetRenderDrawColor(g_Renderer, BACKGROUND_RED, BACKGROUND_GREEN, BACKGROUND_BLUE, BACKGROUND_ALPHA);
             SDL_RenderClear(g_Renderer);
 
-            drawBoard();
+            p_Board->Render(g_Renderer);
 
             SDL_SetRenderDrawColor(g_Renderer, 0, 255, 0, BACKGROUND_ALPHA);
 
@@ -265,6 +262,11 @@ int main()
     if (p_Tetromino != NULL)
     {
         delete p_Tetromino;
+    }
+
+    if (p_Board != NULL)
+    {
+        delete p_Board;
     }
 
     std::cout << "Quiting game loop..." << std::endl;
