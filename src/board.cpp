@@ -70,16 +70,10 @@ void Board::Render(SDL_Renderer *renderer) const
     SDL_RenderDrawLines(renderer, boardPoints, 5);
 
     // Render Blocks
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 0);
-    int numRects = m_Blocks.size();
-    SDL_Rect rects[numRects];
-
-    for (int i = 0; i < numRects; i++)
+    for (auto &block : m_Blocks)
     {
-        rects[i] = m_Blocks.at(i).GetRenderRect();
+        block.Render(renderer);
     }
-
-    SDL_RenderFillRects(renderer, rects, numRects);
 }
 
 void Board::ClearCompletedRows()

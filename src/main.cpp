@@ -151,6 +151,7 @@ int main()
 
     const int maxRotationDelta = 100;
     int rotationDelta = maxRotationDelta;
+
     const int maxMovementDelta = 100;
     int downwardMovementMultiplier = 1;
     int movementDelta = maxMovementDelta;
@@ -170,6 +171,12 @@ int main()
                 p_Board->ClearCompletedRows();
                 int typeNum = dist7(rng);
                 p_Tetromino = new Tetromino((TetrominoType)typeNum);
+
+                if (p_Tetromino->DetectCollision(p_Board)) {
+                    std::cout << "GAME OVER" << std::endl; 
+                    quit = true;
+                }
+
                 roundDelta = 0;
                 downwardMovementMultiplier = 1;
             }

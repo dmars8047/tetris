@@ -5,39 +5,56 @@ Block::Block()
 {
     m_x = 0;
     m_y = 0;
+    m_r = 255;
+    m_b = 255;
+    m_g = 255;
 }
 
 Block::Block(int x, int y)
 {
     m_x = x;
     m_y = y;
+    m_r = 255;
+    m_b = 255;
+    m_g = 255;
 }
 
-Block::~Block()
-{
+Block::~Block() {
     // delete m_Rect;
 };
 
 void Block::Render(SDL_Renderer *renderer) const
 {
+    SDL_SetRenderDrawColor(renderer, m_r, m_g, m_b, 255);
     SDL_Rect rect = GetRenderRect();
     SDL_RenderFillRect(renderer, &rect);
 }
 
-SDL_Rect Block::GetRenderRect() const {
+SDL_Rect Block::GetRenderRect() const
+{
     SDL_Rect rect = SDL_Rect{x : m_x + 1, y : m_y + 1, w : BLOCK_SIZE - 1, h : BLOCK_SIZE - 1};
     return rect;
 }
 
-void Block::SetPosition(int x, int y) {
+void Block::SetPosition(int x, int y)
+{
     m_x = x;
     m_y = y;
 }
 
-int Block::GetPosition_X() const {
+void Block::SetColor(Uint8 r, Uint8 g, Uint8 b)
+{
+    m_r = r;
+    m_g = g;
+    m_b = b;
+}
+
+int Block::GetPosition_X() const
+{
     return m_x;
 }
 
-int Block::GetPosition_Y() const {
+int Block::GetPosition_Y() const
+{
     return m_y;
 }

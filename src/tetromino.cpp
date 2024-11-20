@@ -25,7 +25,30 @@ void Tetromino::Render(SDL_Renderer *renderer) const
         return;
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, BACKGROUND_ALPHA);
+    switch (m_type)
+    {
+    case TetrominoType::S:
+        SDL_SetRenderDrawColor(renderer, 83, 218, 63, BACKGROUND_ALPHA);
+        break;
+    case TetrominoType::O:
+        SDL_SetRenderDrawColor(renderer, 254, 251, 52, BACKGROUND_ALPHA);
+        break;
+    case TetrominoType::I:
+        SDL_SetRenderDrawColor(renderer, 1, 237, 250, BACKGROUND_ALPHA);
+        break;
+    case TetrominoType::T:
+        SDL_SetRenderDrawColor(renderer, 221, 10, 178, BACKGROUND_ALPHA);
+        break;
+    case TetrominoType::L:
+        SDL_SetRenderDrawColor(renderer, 255, 200, 46, BACKGROUND_ALPHA);
+        break;
+    case TetrominoType::Z:
+        SDL_SetRenderDrawColor(renderer, 253, 63, 89, BACKGROUND_ALPHA);
+        break;
+    case TetrominoType::J:
+        SDL_SetRenderDrawColor(renderer, 0, 119, 211, BACKGROUND_ALPHA);
+        break;
+    }
 
     SDL_Rect rect_0 = m_Blocks.at(0).GetRenderRect();
     SDL_Rect rect_1 = m_Blocks.at(1).GetRenderRect();
@@ -289,6 +312,19 @@ void Tetromino::MoveDown(Board *board)
     m_Blocks.at(3).SetPosition(point_3.x, point_3.y);
 }
 
+bool Tetromino::DetectCollision(const Board *board) const
+{
+    for (auto &block : m_Blocks)
+    {
+        if (board->IsColliding(block.GetPosition_X(), block.GetPosition_Y()))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool Tetromino::GetIsLanded() const
 {
     return m_IsLanded;
@@ -340,6 +376,9 @@ void Tetromino::MoveLeft(const Board *board)
 std::array<Block, 4> Tetromino::GetInitialBlocks(TetrominoType type)
 {
     std::array<Block, 4> blocks;
+    Uint8 r = 0;
+    Uint8 g = 0;
+    Uint8 b = 0;
 
     switch (type)
     {
@@ -348,49 +387,67 @@ std::array<Block, 4> Tetromino::GetInitialBlocks(TetrominoType type)
         blocks[1] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
         blocks[2] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
         blocks[3] = Block(BLOCK_SIZE * 7, BLOCK_SIZE * 2);
+        r = 1;
+        g = 237;
+        b = 250;
         break;
     case TetrominoType::O:
         blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE);
         blocks[1] = Block(BLOCK_SIZE * 6, BLOCK_SIZE);
         blocks[2] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
         blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
+        r = 254;
+        g = 251;
+        b = 52;
         break;
     case TetrominoType::J:
         blocks[2] = Block(BLOCK_SIZE * 4, BLOCK_SIZE);
         blocks[1] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
         blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
         blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
+        g = 119;
+        b = 211;
         break;
     case TetrominoType::L:
         blocks[2] = Block(BLOCK_SIZE * 6, BLOCK_SIZE);
         blocks[1] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
         blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
         blocks[3] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
+        r = 255;
+        g = 200;
+        b = 46;
         break;
     case TetrominoType::T:
         blocks[1] = Block(BLOCK_SIZE * 5, BLOCK_SIZE);
         blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
         blocks[2] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
         blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
+        r = 221;
+        g = 10;
+        b = 178;
         break;
     case TetrominoType::S:
         blocks[1] = Block(BLOCK_SIZE * 5, BLOCK_SIZE);
         blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
         blocks[2] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
         blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE);
+        r = 83;
+        g = 218;
+        b = 63;
         break;
     case TetrominoType::Z:
         blocks[1] = Block(BLOCK_SIZE * 5, BLOCK_SIZE);
         blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
         blocks[2] = Block(BLOCK_SIZE * 4, BLOCK_SIZE);
         blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
+        r = 253;
+        g = 63;
+        b = 89;
         break;
-    default:
-        blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE);
-        blocks[1] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
-        blocks[2] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 3);
-        blocks[3] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 4);
-        break;
+    }
+
+    for (Block &block: blocks) {
+        block.SetColor(r, g, b);
     }
 
     return blocks;

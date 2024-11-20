@@ -16,6 +16,7 @@ public:
     void MoveLeft(const Board *board);
     void MoveRight(const Board *board);
     void MoveDown(Board *board);
+    bool DetectCollision(const Board *board) const;
     bool GetIsLanded() const;
     void Rotate(const Board *board);
 
