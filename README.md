@@ -1,7 +1,16 @@
 # tetris
 A Tetris Clone
 
-## Debug Compile (LINUX)
+## Compile (LINUX)
 ```
-g++ -std=c++17 main.cpp constants.hpp block.cpp tetromino.cpp timer.cpp -Wall -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer -g -o ./bin/app.out
+make
 ```
+
+This will put an executable called tetris in the bin directory.
+
+## Compile (LINUX)
+```
+make mac
+```
+
+This will put an executable called tetris in the bin directory.
