@@ -8,20 +8,18 @@ Block::Block()
     m_r = 255;
     m_b = 255;
     m_g = 255;
+    m_size = BLOCK_SIZE;
 }
 
-Block::Block(int x, int y)
+Block::Block(int x, int y, int size)
 {
     m_x = x;
     m_y = y;
     m_r = 255;
     m_b = 255;
     m_g = 255;
+    m_size = size;
 }
-
-Block::~Block() {
-    // delete m_Rect;
-};
 
 void Block::Render(SDL_Renderer *renderer) const
 {
@@ -32,7 +30,7 @@ void Block::Render(SDL_Renderer *renderer) const
 
 SDL_Rect Block::GetRenderRect() const
 {
-    SDL_Rect rect = SDL_Rect{x : m_x + 1, y : m_y + 1, w : BLOCK_SIZE - 1, h : BLOCK_SIZE - 1};
+    SDL_Rect rect = SDL_Rect{x : m_x + 1, y : m_y + 1, w : m_size - 1, h : m_size - 1};
     return rect;
 }
 

@@ -1,6 +1,6 @@
 #if __APPLE__
 #include <SDL.h>
-#elif
+#else
 #include <SDL2/SDL.h>
 #endif
 #include <iostream>

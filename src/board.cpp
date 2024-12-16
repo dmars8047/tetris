@@ -1,18 +1,22 @@
+#include <algorithm>
+#include <unordered_map>
+
 #include "board.hpp"
 #include "constants.hpp"
 
 #if __APPLE__
 #include <SDL.h>
-#elif
+#else
 #include <SDL2/SDL.h>
 #endif
 
-Board::Board()
+Board::Board(int blockSize)
 {
     m_Min_X = 0;
     m_Min_Y = 0;
-    m_Max_X = WINDOW_WIDTH - BLOCK_SIZE;
-    m_Max_Y = WINDOW_HEIGHT - BLOCK_SIZE;
+    m_Max_X = blockSize * 11;
+    m_Max_Y = blockSize * 21;
+    m_BlockSize = blockSize;
 }
 
 bool Board::IsColliding(int x, int y) const
@@ -45,26 +49,26 @@ void Board::Render(SDL_Renderer *renderer) const
     SDL_SetRenderDrawColor(renderer, 51, 51, 51, 0);
 
     // Draw vertical grid lines
-    for (int x = BLOCK_SIZE * 2; x < WINDOW_WIDTH - (BLOCK_SIZE); x += BLOCK_SIZE)
+    for (int x = m_BlockSize * 2; x < m_Max_X; x += m_BlockSize)
     {
-        SDL_RenderDrawLine(renderer, x, BLOCK_SIZE, x, WINDOW_HEIGHT - BLOCK_SIZE);
+        SDL_RenderDrawLine(renderer, x, m_BlockSize, x, m_Max_Y);
     }
 
     // Draw horizontal grid lines
-    for (int y = BLOCK_SIZE * 2; y < WINDOW_HEIGHT - (BLOCK_SIZE); y += BLOCK_SIZE)
+    for (int y = m_BlockSize * 2; y < m_Max_Y; y += m_BlockSize)
     {
-        SDL_RenderDrawLine(renderer, BLOCK_SIZE, y, WINDOW_WIDTH - BLOCK_SIZE, y);
+        SDL_RenderDrawLine(renderer, m_BlockSize, y, m_Max_X, y);
     }
 
     // Draw the border of the board
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
 
     SDL_Point boardPoints[] = {
-        SDL_Point{x : BLOCK_SIZE, y : BLOCK_SIZE},
-        SDL_Point{x : BLOCK_SIZE, y : WINDOW_HEIGHT - BLOCK_SIZE},
-        SDL_Point{x : WINDOW_WIDTH - BLOCK_SIZE, y : WINDOW_HEIGHT - BLOCK_SIZE},
-        SDL_Point{x : WINDOW_WIDTH - BLOCK_SIZE, y : BLOCK_SIZE},
-        SDL_Point{x : BLOCK_SIZE, y : BLOCK_SIZE}};
+        SDL_Point{x : m_BlockSize, y : m_BlockSize},
+        SDL_Point{x : m_BlockSize, y : m_Max_Y},
+        SDL_Point{x : m_Max_X, y : m_Max_Y},
+        SDL_Point{x : m_Max_X, y : m_BlockSize},
+        SDL_Point{x : m_BlockSize, y : m_BlockSize}};
 
     // Draw the board
     SDL_RenderDrawLines(renderer, boardPoints, 5);
@@ -76,7 +80,7 @@ void Board::Render(SDL_Renderer *renderer) const
     }
 }
 
-void Board::ClearCompletedRows()
+int Board::ClearCompletedRows()
 {
     // Create a map to count the blocks in each row
     std::unordered_map<int, int> rowCount;
@@ -115,8 +119,10 @@ void Board::ClearCompletedRows()
         {
             if (block.GetPosition_Y() < row)
             {
-                block.SetPosition(block.GetPosition_X(), block.GetPosition_Y() + BLOCK_SIZE);
+                block.SetPosition(block.GetPosition_X(), block.GetPosition_Y() + m_BlockSize);
             }
         }
     }
+
+    return fullRows.size();
 }

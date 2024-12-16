@@ -6,22 +6,24 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <SDL_mixer.h>
-#elif
+#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 #endif
 
-#include "timer.hpp"
 #include "constants.hpp"
-#include "block.hpp"
-#include "board.hpp"
-#include "tetromino.hpp"
+#include "assetmanager.hpp"
+#include "gameplayscene.hpp"
+#include "openingscene.hpp"
+#include "gameoverscene.hpp"
+#include "screenconfig.hpp"
 
 SDL_Window *g_MainWindow = NULL;
 SDL_Renderer *g_Renderer = NULL;
 SDL_GameController *g_GameController = NULL;
+AssetManager *g_AssetManager = NULL;
 
 bool initSDL()
 {
@@ -58,7 +60,23 @@ bool initSDL()
         }
     }
 
-    g_MainWindow = SDL_CreateWindow(APP_NAME.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_DisplayMode displayMode;
+    SDL_GetCurrentDisplayMode(0, &displayMode);
+
+    int scalingValue = 1;
+
+    if (WINDOW_HEIGHT > displayMode.h)
+    {
+        scalingValue = 2;
+    }
+
+    g_MainWindow = SDL_CreateWindow(
+        APP_NAME.c_str(),
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        WINDOW_WIDTH / scalingValue,
+        WINDOW_HEIGHT / scalingValue,
+        SDL_WINDOW_SHOWN);
 
     if (g_MainWindow == NULL)
     {
@@ -127,11 +145,42 @@ void destroy_SDL()
     SDL_Quit();
 }
 
+bool loadSharedAssets(const ScreenConfig &screenConfig)
+{
+    g_AssetManager = new AssetManager(g_Renderer);
+
+    // Fonts
+    g_AssetManager->LoadFont(MAIN_FONT_ID, "./assets/fonts/PressStart2P-Regular.ttf", screenConfig.GetBlockSize());
+
+    // Scoreboard numbers
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_0, "0", COLOR_WHITE);
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_1, "1", COLOR_WHITE);
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_2, "2", COLOR_WHITE);
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_3, "3", COLOR_WHITE);
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_4, "4", COLOR_WHITE);
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_5, "5", COLOR_WHITE);
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_6, "6", COLOR_WHITE);
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_7, "7", COLOR_WHITE);
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_8, "8", COLOR_WHITE);
+    g_AssetManager->LoadFontTexture(SHARED_FONT_TEXTURE_9, "9", COLOR_WHITE);
+
+    return true;
+}
+
 int main()
 {
     if (!initSDL())
     {
-        std::cout << "Failed to initialize window!" << std::endl;
+        std::cout << "Failed to initialize SDL!" << std::endl;
+        destroy_SDL();
+        return 1;
+    }
+
+    ScreenConfig screenConfig;
+
+    if (!loadSharedAssets(screenConfig))
+    {
+        std::cout << "Failed to load shared assets!" << std::endl;
         destroy_SDL();
         return 1;
     }
@@ -139,54 +188,18 @@ int main()
     // Initialize loop
     bool quit = false;
     SDL_Event e;
-    Timer timer = Timer();
-    int roundDelta = 0;
-    int roundMax = 1000;
-
-    // Random number generation
-    std::random_device dev;
-    std::mt19937 rng(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> dist7(0, 6);
-    int typeNum = dist7(rng);
-
-    const int maxRotationDelta = 100;
-    int rotationDelta = maxRotationDelta;
-
-    const int maxMovementDelta = 100;
-    int downwardMovementMultiplier = 1;
-    int movementDelta = maxMovementDelta;
-
-    SDL_Keycode lastUsedKey;
-    Board *p_Board = new Board();
-    Tetromino *p_Tetromino = new Tetromino((TetrominoType)typeNum);
+    Scene currentScene = Scene::Opening;
+    OpeningScene *openingScene = new OpeningScene(
+        *g_AssetManager, screenConfig.GetBlockSize(),
+        screenConfig.GetViewPortWidth(),
+        screenConfig.GetViewPortHeight());
+    GamePlayScene *gameplayScene = new GamePlayScene(*g_AssetManager, screenConfig.GetBlockSize());
+    GameOverScene *gameOverScene = new GameOverScene(*g_AssetManager, screenConfig.GetBlockSize());
 
     try
     {
         while (!quit)
         {
-            timer.StartNewFrame();
-
-            if (p_Tetromino->GetIsLanded())
-            {
-                p_Board->ClearCompletedRows();
-                int typeNum = dist7(rng);
-                p_Tetromino = new Tetromino((TetrominoType)typeNum);
-
-                if (p_Tetromino->DetectCollision(p_Board)) {
-                    std::cout << "GAME OVER" << std::endl; 
-                    quit = true;
-                }
-
-                roundDelta = 0;
-                downwardMovementMultiplier = 1;
-            }
-
-            if (roundDelta >= roundMax)
-            {
-                p_Tetromino->MoveDown(p_Board);
-                roundDelta = roundMax - roundDelta;
-            }
-
             // Handle events on queue
             while (SDL_PollEvent(&e) != 0)
             {
@@ -203,95 +216,76 @@ int main()
                     case SDLK_ESCAPE:
                         quit = true;
                         break;
-                    case SDLK_UP:
-                    case SDLK_w:
-                        lastUsedKey = SDLK_UP;
-                        if (rotationDelta >= maxRotationDelta)
-                        {
-                            p_Tetromino->Rotate(p_Board);
-                            rotationDelta = 0;
-                        }
-                        break;
-                    case SDLK_DOWN:
-                    case SDLK_s:
-                        if (movementDelta >= maxMovementDelta)
-                        {
-                            p_Tetromino->MoveDown(p_Board);
-
-                            if (!p_Tetromino->GetIsLanded())
-                            {
-                                roundDelta = 0;
-                            }
-
-                            movementDelta = 0;
-                        }
-
-                        if (lastUsedKey == SDLK_DOWN)
-                        {
-                            downwardMovementMultiplier = 2;
-                        }
-                        else
-                        {
-                            lastUsedKey = SDLK_DOWN;
-                        }
-
-                        break;
-                    case SDLK_RIGHT:
-                    case SDLK_d:
-                        lastUsedKey = SDLK_RIGHT;
-                        if (movementDelta >= maxMovementDelta)
-                        {
-                            p_Tetromino->MoveRight(p_Board);
-                            movementDelta = 0;
-                        }
-                        break;
-                    case SDLK_LEFT:
-                    case SDLK_a:
-                        lastUsedKey = SDLK_LEFT;
-                        if (movementDelta >= maxMovementDelta)
-                        {
-                            p_Tetromino->MoveLeft(p_Board);
-                            movementDelta = 0;
-                        }
-                        break;
-                    default:
-                        lastUsedKey = SDLK_UNKNOWN;
-                        break;
-                    }
-                }
-                else
-                {
-                    if (lastUsedKey == SDLK_DOWN)
-                    {
-                        lastUsedKey == SDLK_UNKNOWN;
                     }
                 }
 
-                if (lastUsedKey != SDLK_DOWN)
+                switch (currentScene)
                 {
-                    downwardMovementMultiplier = 1;
+                case Scene::GamePlay:
+                    gameplayScene->ParseInput(e);
+                    break;
+                case Scene::Opening:
+                    openingScene->ParseInput(e);
+                    break;
+                case Scene::GameOver:
+                    gameOverScene->ParseInput(e);
+                    break;
                 }
+            }
+
+            Scene nextScene = currentScene;
+
+            switch (currentScene)
+            {
+            case Scene::GameOver:
+                if (gameOverScene->RestartRequested())
+                {
+                    nextScene = Scene::GamePlay;
+                    gameplayScene = new GamePlayScene(*g_AssetManager, screenConfig.GetBlockSize());
+                    gameOverScene->AcknowledgeRestartRequest();
+                }
+                break;
+            case Scene::GamePlay:
+                gameplayScene->Update();
+                if (gameplayScene->IsGameOver())
+                {
+                    gameOverScene->SetNumericValues(
+                        gameplayScene->GetPoints(),
+                        gameplayScene->GetLevels(),
+                        gameplayScene->GetLinesCleared());
+
+                    nextScene = Scene::GameOver;
+                }
+                break;
+            case Scene::Opening:
+                if (openingScene->IsReady())
+                {
+                    nextScene = Scene::GamePlay;
+                }
+                break;
             }
 
             // Clear screen
             SDL_SetRenderDrawColor(g_Renderer, BACKGROUND_RED, BACKGROUND_GREEN, BACKGROUND_BLUE, BACKGROUND_ALPHA);
             SDL_RenderClear(g_Renderer);
 
-            p_Board->Render(g_Renderer);
-            p_Tetromino->Render(g_Renderer);
+            switch (currentScene)
+            {
+            case Scene::GamePlay:
+                gameplayScene->Render(g_Renderer);
+                break;
+            case Scene::Opening:
+                openingScene->Render(g_Renderer);
+                break;
+            case Scene::GameOver:
+                gameOverScene->Render(g_Renderer, screenConfig.GetViewPortWidth());
+                break;
+            }
 
             SDL_RenderPresent(g_Renderer);
-            roundDelta += timer.GetDeltaMilliSeconds();
 
-            if (rotationDelta < maxRotationDelta)
-            {
-                rotationDelta += timer.GetDeltaMilliSeconds();
-            }
-
-            if (movementDelta < maxMovementDelta)
-            {
-                movementDelta += timer.GetDeltaMilliSeconds() * downwardMovementMultiplier;
-            }
+            if (nextScene != currentScene)
+                currentScene = nextScene;
         }
     }
     catch (const std::exception &e)
@@ -299,14 +293,24 @@ int main()
         std::cerr << "Game Loop Error: " << e.what() << std::endl;
     }
 
-    if (p_Tetromino != NULL)
+    if (openingScene != NULL)
     {
-        delete p_Tetromino;
+        delete openingScene;
     }
 
-    if (p_Board != NULL)
+    if (gameplayScene != NULL)
     {
-        delete p_Board;
+        delete gameplayScene;
+    }
+
+    if (gameOverScene != NULL)
+    {
+        delete gameOverScene;
+    }
+
+    if (g_AssetManager != NULL)
+    {
+        delete g_AssetManager;
     }
 
     std::cout << "Quiting game loop..." << std::endl;

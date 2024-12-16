@@ -2,7 +2,7 @@
 
 #if __APPLE__
 #include <SDL.h>
-#elif
+#else
 #include <SDL2/SDL.h>
 #endif
 
@@ -10,12 +10,39 @@
 #include "tetromino.hpp"
 #include "block.hpp"
 
-Tetromino::Tetromino(TetrominoType type)
+Tetromino::Tetromino(TetrominoType type, int blockSize)
 {
+    m_BlockSize = blockSize;
     m_type = type;
     m_rotation = TetrominoRotation::Zero;
-    m_Blocks = GetInitialBlocks(m_type);
     m_IsLanded = false;
+
+    switch (m_type)
+    {
+    case TetrominoType::S:
+        m_Color = COLOR_TETROMINO_S;
+        break;
+    case TetrominoType::O:
+        m_Color = COLOR_TETROMINO_O;
+        break;
+    case TetrominoType::I:
+        m_Color = COLOR_TETROMINO_I;
+        break;
+    case TetrominoType::T:
+        m_Color = COLOR_TETROMINO_T;
+        break;
+    case TetrominoType::L:
+        m_Color = COLOR_TETROMINO_L;
+        break;
+    case TetrominoType::Z:
+        m_Color = COLOR_TETROMINO_Z;
+        break;
+    case TetrominoType::J:
+        m_Color = COLOR_TETROMINO_J;
+        break;
+    }
+
+    m_Blocks = GetInitialBlocks(m_type);
 }
 
 void Tetromino::Render(SDL_Renderer *renderer) const
@@ -25,30 +52,7 @@ void Tetromino::Render(SDL_Renderer *renderer) const
         return;
     }
 
-    switch (m_type)
-    {
-    case TetrominoType::S:
-        SDL_SetRenderDrawColor(renderer, 83, 218, 63, BACKGROUND_ALPHA);
-        break;
-    case TetrominoType::O:
-        SDL_SetRenderDrawColor(renderer, 254, 251, 52, BACKGROUND_ALPHA);
-        break;
-    case TetrominoType::I:
-        SDL_SetRenderDrawColor(renderer, 1, 237, 250, BACKGROUND_ALPHA);
-        break;
-    case TetrominoType::T:
-        SDL_SetRenderDrawColor(renderer, 221, 10, 178, BACKGROUND_ALPHA);
-        break;
-    case TetrominoType::L:
-        SDL_SetRenderDrawColor(renderer, 255, 200, 46, BACKGROUND_ALPHA);
-        break;
-    case TetrominoType::Z:
-        SDL_SetRenderDrawColor(renderer, 253, 63, 89, BACKGROUND_ALPHA);
-        break;
-    case TetrominoType::J:
-        SDL_SetRenderDrawColor(renderer, 0, 119, 211, BACKGROUND_ALPHA);
-        break;
-    }
+    SDL_SetRenderDrawColor(renderer, m_Color.r, m_Color.g, m_Color.b, m_Color.a);
 
     SDL_Rect rect_0 = m_Blocks.at(0).GetRenderRect();
     SDL_Rect rect_1 = m_Blocks.at(1).GetRenderRect();
@@ -60,7 +64,7 @@ void Tetromino::Render(SDL_Renderer *renderer) const
     SDL_RenderFillRects(renderer, rects, 4);
 }
 
-void Tetromino::Rotate(const Board *board)
+void Tetromino::Rotate(const Board &board)
 {
     // Block 0 is always the keystone block
     int keystonePosition_X = m_Blocks.at(0).GetPosition_X();
@@ -77,28 +81,28 @@ void Tetromino::Rotate(const Board *board)
         switch (m_rotation)
         {
         case TetrominoRotation::Zero:
-            point_0 = {x : keystonePosition_X, y : keystonePosition_Y + (BLOCK_SIZE)};
-            point_1 = {x : keystonePosition_X, y : keystonePosition_Y - (BLOCK_SIZE)};
+            point_0 = {x : keystonePosition_X, y : keystonePosition_Y + (m_BlockSize)};
+            point_1 = {x : keystonePosition_X, y : keystonePosition_Y - (m_BlockSize)};
             point_2 = {x : keystonePosition_X, y : keystonePosition_Y};
-            point_3 = {x : keystonePosition_X, y : keystonePosition_Y + (BLOCK_SIZE * 2)};
+            point_3 = {x : keystonePosition_X, y : keystonePosition_Y + (m_BlockSize * 2)};
             break;
         case TetrominoRotation::Ninety:
-            point_0 = {x : keystonePosition_X - (BLOCK_SIZE), y : keystonePosition_Y};
-            point_1 = {x : keystonePosition_X - (BLOCK_SIZE * 2), y : keystonePosition_Y};
+            point_0 = {x : keystonePosition_X - (m_BlockSize), y : keystonePosition_Y};
+            point_1 = {x : keystonePosition_X - (m_BlockSize * 2), y : keystonePosition_Y};
             point_2 = {x : keystonePosition_X, y : keystonePosition_Y};
-            point_3 = {x : keystonePosition_X + (BLOCK_SIZE), y : keystonePosition_Y};
+            point_3 = {x : keystonePosition_X + (m_BlockSize), y : keystonePosition_Y};
             break;
         case TetrominoRotation::OneEighty:
-            point_0 = {x : keystonePosition_X, y : keystonePosition_Y - (BLOCK_SIZE)};
+            point_0 = {x : keystonePosition_X, y : keystonePosition_Y - (m_BlockSize)};
             point_1 = {x : keystonePosition_X, y : keystonePosition_Y};
-            point_2 = {x : keystonePosition_X, y : keystonePosition_Y + (BLOCK_SIZE)};
-            point_3 = {x : keystonePosition_X, y : keystonePosition_Y - (BLOCK_SIZE * 2)};
+            point_2 = {x : keystonePosition_X, y : keystonePosition_Y + (m_BlockSize)};
+            point_3 = {x : keystonePosition_X, y : keystonePosition_Y - (m_BlockSize * 2)};
             break;
         case TetrominoRotation::TwoSeventy:
-            point_0 = {x : keystonePosition_X + (BLOCK_SIZE), y : keystonePosition_Y};
-            point_1 = {x : keystonePosition_X - BLOCK_SIZE, y : keystonePosition_Y};
+            point_0 = {x : keystonePosition_X + (m_BlockSize), y : keystonePosition_Y};
+            point_1 = {x : keystonePosition_X - m_BlockSize, y : keystonePosition_Y};
             point_2 = {x : keystonePosition_X, y : keystonePosition_Y};
-            point_3 = {x : keystonePosition_X + (BLOCK_SIZE * 2), y : keystonePosition_Y};
+            point_3 = {x : keystonePosition_X + (m_BlockSize * 2), y : keystonePosition_Y};
             break;
         }
 
@@ -114,27 +118,27 @@ void Tetromino::Rotate(const Board *board)
         {
         case TetrominoRotation::Zero:
             point_0 = {x : keystonePosition_X, y : keystonePosition_Y};
-            point_1 = {x : keystonePosition_X, y : keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {x : keystonePosition_X, y : keystonePosition_Y + BLOCK_SIZE};
-            point_3 = {x : keystonePosition_X + BLOCK_SIZE, y : keystonePosition_Y - BLOCK_SIZE};
+            point_1 = {x : keystonePosition_X, y : keystonePosition_Y - m_BlockSize};
+            point_2 = {x : keystonePosition_X, y : keystonePosition_Y + m_BlockSize};
+            point_3 = {x : keystonePosition_X + m_BlockSize, y : keystonePosition_Y - m_BlockSize};
             break;
         case TetrominoRotation::Ninety:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
-            point_3 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y + BLOCK_SIZE};
+            point_1 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
+            point_3 = {keystonePosition_X + m_BlockSize, keystonePosition_Y + m_BlockSize};
             break;
         case TetrominoRotation::OneEighty:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y + BLOCK_SIZE};
-            point_3 = {keystonePosition_X, keystonePosition_Y + BLOCK_SIZE};
+            point_1 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y + m_BlockSize};
+            point_3 = {keystonePosition_X, keystonePosition_Y + m_BlockSize};
             break;
         case TetrominoRotation::TwoSeventy:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
-            point_3 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y - BLOCK_SIZE};
+            point_1 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
+            point_3 = {keystonePosition_X - m_BlockSize, keystonePosition_Y - m_BlockSize};
             break;
         }
         break;
@@ -143,27 +147,27 @@ void Tetromino::Rotate(const Board *board)
         {
         case TetrominoRotation::Zero:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {keystonePosition_X, keystonePosition_Y + BLOCK_SIZE};
-            point_3 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y + BLOCK_SIZE};
+            point_1 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
+            point_2 = {keystonePosition_X, keystonePosition_Y + m_BlockSize};
+            point_3 = {keystonePosition_X + m_BlockSize, keystonePosition_Y + m_BlockSize};
             break;
         case TetrominoRotation::Ninety:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
-            point_3 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y + BLOCK_SIZE};
+            point_1 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
+            point_3 = {keystonePosition_X - m_BlockSize, keystonePosition_Y + m_BlockSize};
             break;
         case TetrominoRotation::OneEighty:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y - BLOCK_SIZE};
-            point_3 = {keystonePosition_X, keystonePosition_Y + BLOCK_SIZE};
+            point_1 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y - m_BlockSize};
+            point_3 = {keystonePosition_X, keystonePosition_Y + m_BlockSize};
             break;
         case TetrominoRotation::TwoSeventy:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
-            point_3 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y - BLOCK_SIZE};
+            point_1 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
+            point_3 = {keystonePosition_X + m_BlockSize, keystonePosition_Y - m_BlockSize};
             break;
         }
         break;
@@ -172,27 +176,27 @@ void Tetromino::Rotate(const Board *board)
         {
         case TetrominoRotation::Zero:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {keystonePosition_X, keystonePosition_Y + BLOCK_SIZE};
-            point_3 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
+            point_1 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
+            point_2 = {keystonePosition_X, keystonePosition_Y + m_BlockSize};
+            point_3 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
             break;
         case TetrominoRotation::Ninety:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y + BLOCK_SIZE};
-            point_2 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
-            point_3 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
+            point_1 = {keystonePosition_X, keystonePosition_Y + m_BlockSize};
+            point_2 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
+            point_3 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
             break;
         case TetrominoRotation::OneEighty:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {keystonePosition_X, keystonePosition_Y + BLOCK_SIZE};
-            point_3 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
+            point_1 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
+            point_2 = {keystonePosition_X, keystonePosition_Y + m_BlockSize};
+            point_3 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
             break;
         case TetrominoRotation::TwoSeventy:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
-            point_3 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
+            point_1 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
+            point_3 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
             break;
         }
         break;
@@ -201,27 +205,27 @@ void Tetromino::Rotate(const Board *board)
         {
         case TetrominoRotation::Zero:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
-            point_3 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y + BLOCK_SIZE};
+            point_1 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
+            point_2 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
+            point_3 = {keystonePosition_X + m_BlockSize, keystonePosition_Y + m_BlockSize};
             break;
         case TetrominoRotation::Ninety:
             point_0 = {x : keystonePosition_X, y : keystonePosition_Y};
-            point_1 = {x : keystonePosition_X, y : keystonePosition_Y + BLOCK_SIZE};
-            point_2 = {x : keystonePosition_X + BLOCK_SIZE, y : keystonePosition_Y};
-            point_3 = {x : keystonePosition_X - BLOCK_SIZE, y : keystonePosition_Y + BLOCK_SIZE};
+            point_1 = {x : keystonePosition_X, y : keystonePosition_Y + m_BlockSize};
+            point_2 = {x : keystonePosition_X + m_BlockSize, y : keystonePosition_Y};
+            point_3 = {x : keystonePosition_X - m_BlockSize, y : keystonePosition_Y + m_BlockSize};
             break;
         case TetrominoRotation::OneEighty:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y + BLOCK_SIZE};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
-            point_3 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y - BLOCK_SIZE};
+            point_1 = {keystonePosition_X, keystonePosition_Y + m_BlockSize};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
+            point_3 = {keystonePosition_X - m_BlockSize, keystonePosition_Y - m_BlockSize};
             break;
         case TetrominoRotation::TwoSeventy:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
-            point_3 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y - BLOCK_SIZE};
+            point_1 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
+            point_3 = {keystonePosition_X + m_BlockSize, keystonePosition_Y - m_BlockSize};
             break;
         }
         break;
@@ -230,36 +234,36 @@ void Tetromino::Rotate(const Board *board)
         {
         case TetrominoRotation::Zero:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y - BLOCK_SIZE};
-            point_2 = {keystonePosition_X, keystonePosition_Y + BLOCK_SIZE};
-            point_3 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
+            point_1 = {keystonePosition_X + m_BlockSize, keystonePosition_Y - m_BlockSize};
+            point_2 = {keystonePosition_X, keystonePosition_Y + m_BlockSize};
+            point_3 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
             break;
         case TetrominoRotation::Ninety:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
-            point_2 = {keystonePosition_X, keystonePosition_Y + BLOCK_SIZE};
-            point_3 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y + BLOCK_SIZE};
+            point_1 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
+            point_2 = {keystonePosition_X, keystonePosition_Y + m_BlockSize};
+            point_3 = {keystonePosition_X + m_BlockSize, keystonePosition_Y + m_BlockSize};
             break;
         case TetrominoRotation::OneEighty:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y + BLOCK_SIZE};
-            point_3 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
+            point_1 = {keystonePosition_X - m_BlockSize, keystonePosition_Y};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y + m_BlockSize};
+            point_3 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
             break;
         case TetrominoRotation::TwoSeventy:
             point_0 = {keystonePosition_X, keystonePosition_Y};
-            point_1 = {keystonePosition_X + BLOCK_SIZE, keystonePosition_Y};
-            point_2 = {keystonePosition_X - BLOCK_SIZE, keystonePosition_Y - BLOCK_SIZE};
-            point_3 = {keystonePosition_X, keystonePosition_Y - BLOCK_SIZE};
+            point_1 = {keystonePosition_X + m_BlockSize, keystonePosition_Y};
+            point_2 = {keystonePosition_X - m_BlockSize, keystonePosition_Y - m_BlockSize};
+            point_3 = {keystonePosition_X, keystonePosition_Y - m_BlockSize};
             break;
         }
         break;
     }
 
-    if (board->IsColliding(point_0.x, point_0.y) ||
-        board->IsColliding(point_1.x, point_1.y) ||
-        board->IsColliding(point_2.x, point_2.y) ||
-        board->IsColliding(point_3.x, point_3.y))
+    if (board.IsColliding(point_0.x, point_0.y) ||
+        board.IsColliding(point_1.x, point_1.y) ||
+        board.IsColliding(point_2.x, point_2.y) ||
+        board.IsColliding(point_3.x, point_3.y))
     {
         return;
     }
@@ -287,22 +291,23 @@ void Tetromino::Rotate(const Board *board)
     }
 }
 
-void Tetromino::MoveDown(Board *board)
+void Tetromino::MoveDown(Board &board)
 {
-    SDL_Point point_0 = {x : m_Blocks.at(0).GetPosition_X(), y : m_Blocks.at(0).GetPosition_Y() + BLOCK_SIZE};
-    SDL_Point point_1 = {x : m_Blocks.at(1).GetPosition_X(), y : m_Blocks.at(1).GetPosition_Y() + BLOCK_SIZE};
-    SDL_Point point_2 = {x : m_Blocks.at(2).GetPosition_X(), y : m_Blocks.at(2).GetPosition_Y() + BLOCK_SIZE};
-    SDL_Point point_3 = {x : m_Blocks.at(3).GetPosition_X(), y : m_Blocks.at(3).GetPosition_Y() + BLOCK_SIZE};
+    SDL_Point point_0 = {x : m_Blocks.at(0).GetPosition_X(), y : m_Blocks.at(0).GetPosition_Y() + m_BlockSize};
+    SDL_Point point_1 = {x : m_Blocks.at(1).GetPosition_X(), y : m_Blocks.at(1).GetPosition_Y() + m_BlockSize};
+    SDL_Point point_2 = {x : m_Blocks.at(2).GetPosition_X(), y : m_Blocks.at(2).GetPosition_Y() + m_BlockSize};
+    SDL_Point point_3 = {x : m_Blocks.at(3).GetPosition_X(), y : m_Blocks.at(3).GetPosition_Y() + m_BlockSize};
 
-    if (board->IsColliding(point_0.x, point_0.y) ||
-        board->IsColliding(point_1.x, point_1.y) ||
-        board->IsColliding(point_2.x, point_2.y) ||
-        board->IsColliding(point_3.x, point_3.y))
+    if (board.IsColliding(point_0.x, point_0.y) ||
+        board.IsColliding(point_1.x, point_1.y) ||
+        board.IsColliding(point_2.x, point_2.y) ||
+        board.IsColliding(point_3.x, point_3.y))
     {
         for (auto block : m_Blocks)
         {
-            board->AddBlock(block);
+            board.AddBlock(block);
         }
+
         m_IsLanded = true;
     }
 
@@ -312,11 +317,11 @@ void Tetromino::MoveDown(Board *board)
     m_Blocks.at(3).SetPosition(point_3.x, point_3.y);
 }
 
-bool Tetromino::DetectCollision(const Board *board) const
+bool Tetromino::DetectCollision(const Board &board) const
 {
     for (auto &block : m_Blocks)
     {
-        if (board->IsColliding(block.GetPosition_X(), block.GetPosition_Y()))
+        if (board.IsColliding(block.GetPosition_X(), block.GetPosition_Y()))
         {
             return true;
         }
@@ -330,17 +335,17 @@ bool Tetromino::GetIsLanded() const
     return m_IsLanded;
 }
 
-void Tetromino::MoveRight(const Board *board)
+void Tetromino::MoveRight(const Board &board)
 {
-    SDL_Point point_0 = {x : m_Blocks.at(0).GetPosition_X() + BLOCK_SIZE, y : m_Blocks.at(0).GetPosition_Y()};
-    SDL_Point point_1 = {x : m_Blocks.at(1).GetPosition_X() + BLOCK_SIZE, y : m_Blocks.at(1).GetPosition_Y()};
-    SDL_Point point_2 = {x : m_Blocks.at(2).GetPosition_X() + BLOCK_SIZE, y : m_Blocks.at(2).GetPosition_Y()};
-    SDL_Point point_3 = {x : m_Blocks.at(3).GetPosition_X() + BLOCK_SIZE, y : m_Blocks.at(3).GetPosition_Y()};
+    SDL_Point point_0 = {x : m_Blocks.at(0).GetPosition_X() + m_BlockSize, y : m_Blocks.at(0).GetPosition_Y()};
+    SDL_Point point_1 = {x : m_Blocks.at(1).GetPosition_X() + m_BlockSize, y : m_Blocks.at(1).GetPosition_Y()};
+    SDL_Point point_2 = {x : m_Blocks.at(2).GetPosition_X() + m_BlockSize, y : m_Blocks.at(2).GetPosition_Y()};
+    SDL_Point point_3 = {x : m_Blocks.at(3).GetPosition_X() + m_BlockSize, y : m_Blocks.at(3).GetPosition_Y()};
 
-    if (board->IsColliding(point_0.x, point_0.y) ||
-        board->IsColliding(point_1.x, point_1.y) ||
-        board->IsColliding(point_2.x, point_2.y) ||
-        board->IsColliding(point_3.x, point_3.y))
+    if (board.IsColliding(point_0.x, point_0.y) ||
+        board.IsColliding(point_1.x, point_1.y) ||
+        board.IsColliding(point_2.x, point_2.y) ||
+        board.IsColliding(point_3.x, point_3.y))
     {
         return;
     }
@@ -351,17 +356,17 @@ void Tetromino::MoveRight(const Board *board)
     m_Blocks.at(3).SetPosition(point_3.x, point_3.y);
 }
 
-void Tetromino::MoveLeft(const Board *board)
+void Tetromino::MoveLeft(const Board &board)
 {
-    SDL_Point point_0 = {x : m_Blocks.at(0).GetPosition_X() - BLOCK_SIZE, y : m_Blocks.at(0).GetPosition_Y()};
-    SDL_Point point_1 = {x : m_Blocks.at(1).GetPosition_X() - BLOCK_SIZE, y : m_Blocks.at(1).GetPosition_Y()};
-    SDL_Point point_2 = {x : m_Blocks.at(2).GetPosition_X() - BLOCK_SIZE, y : m_Blocks.at(2).GetPosition_Y()};
-    SDL_Point point_3 = {x : m_Blocks.at(3).GetPosition_X() - BLOCK_SIZE, y : m_Blocks.at(3).GetPosition_Y()};
+    SDL_Point point_0 = {x : m_Blocks.at(0).GetPosition_X() - m_BlockSize, y : m_Blocks.at(0).GetPosition_Y()};
+    SDL_Point point_1 = {x : m_Blocks.at(1).GetPosition_X() - m_BlockSize, y : m_Blocks.at(1).GetPosition_Y()};
+    SDL_Point point_2 = {x : m_Blocks.at(2).GetPosition_X() - m_BlockSize, y : m_Blocks.at(2).GetPosition_Y()};
+    SDL_Point point_3 = {x : m_Blocks.at(3).GetPosition_X() - m_BlockSize, y : m_Blocks.at(3).GetPosition_Y()};
 
-    if (board->IsColliding(point_0.x, point_0.y) ||
-        board->IsColliding(point_1.x, point_1.y) ||
-        board->IsColliding(point_2.x, point_2.y) ||
-        board->IsColliding(point_3.x, point_3.y))
+    if (board.IsColliding(point_0.x, point_0.y) ||
+        board.IsColliding(point_1.x, point_1.y) ||
+        board.IsColliding(point_2.x, point_2.y) ||
+        board.IsColliding(point_3.x, point_3.y))
     {
         return;
     }
@@ -376,78 +381,56 @@ void Tetromino::MoveLeft(const Board *board)
 std::array<Block, 4> Tetromino::GetInitialBlocks(TetrominoType type)
 {
     std::array<Block, 4> blocks;
-    Uint8 r = 0;
-    Uint8 g = 0;
-    Uint8 b = 0;
 
     switch (type)
     {
     case TetrominoType::I:
-        blocks[0] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
-        blocks[1] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
-        blocks[2] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
-        blocks[3] = Block(BLOCK_SIZE * 7, BLOCK_SIZE * 2);
-        r = 1;
-        g = 237;
-        b = 250;
+        blocks[0] = Block(m_BlockSize * 6, m_BlockSize * 2, m_BlockSize);
+        blocks[1] = Block(m_BlockSize * 4, m_BlockSize * 2, m_BlockSize);
+        blocks[2] = Block(m_BlockSize * 5, m_BlockSize * 2, m_BlockSize);
+        blocks[3] = Block(m_BlockSize * 7, m_BlockSize * 2, m_BlockSize);
         break;
     case TetrominoType::O:
-        blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE);
-        blocks[1] = Block(BLOCK_SIZE * 6, BLOCK_SIZE);
-        blocks[2] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
-        blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
-        r = 254;
-        g = 251;
-        b = 52;
+        blocks[0] = Block(m_BlockSize * 5, m_BlockSize, m_BlockSize);
+        blocks[1] = Block(m_BlockSize * 6, m_BlockSize, m_BlockSize);
+        blocks[2] = Block(m_BlockSize * 5, m_BlockSize * 2, m_BlockSize);
+        blocks[3] = Block(m_BlockSize * 6, m_BlockSize * 2, m_BlockSize);
         break;
     case TetrominoType::J:
-        blocks[2] = Block(BLOCK_SIZE * 4, BLOCK_SIZE);
-        blocks[1] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
-        blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
-        blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
-        g = 119;
-        b = 211;
+        blocks[2] = Block(m_BlockSize * 4, m_BlockSize, m_BlockSize);
+        blocks[1] = Block(m_BlockSize * 4, m_BlockSize * 2, m_BlockSize);
+        blocks[0] = Block(m_BlockSize * 5, m_BlockSize * 2, m_BlockSize);
+        blocks[3] = Block(m_BlockSize * 6, m_BlockSize * 2, m_BlockSize);
         break;
     case TetrominoType::L:
-        blocks[2] = Block(BLOCK_SIZE * 6, BLOCK_SIZE);
-        blocks[1] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
-        blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
-        blocks[3] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
-        r = 255;
-        g = 200;
-        b = 46;
+        blocks[2] = Block(m_BlockSize * 6, m_BlockSize, m_BlockSize);
+        blocks[1] = Block(m_BlockSize * 6, m_BlockSize * 2, m_BlockSize);
+        blocks[0] = Block(m_BlockSize * 5, m_BlockSize * 2, m_BlockSize);
+        blocks[3] = Block(m_BlockSize * 4, m_BlockSize * 2, m_BlockSize);
         break;
     case TetrominoType::T:
-        blocks[1] = Block(BLOCK_SIZE * 5, BLOCK_SIZE);
-        blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
-        blocks[2] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
-        blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
-        r = 221;
-        g = 10;
-        b = 178;
+        blocks[1] = Block(m_BlockSize * 5, m_BlockSize, m_BlockSize);
+        blocks[0] = Block(m_BlockSize * 5, m_BlockSize * 2, m_BlockSize);
+        blocks[2] = Block(m_BlockSize * 4, m_BlockSize * 2, m_BlockSize);
+        blocks[3] = Block(m_BlockSize * 6, m_BlockSize * 2, m_BlockSize);
         break;
     case TetrominoType::S:
-        blocks[1] = Block(BLOCK_SIZE * 5, BLOCK_SIZE);
-        blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
-        blocks[2] = Block(BLOCK_SIZE * 4, BLOCK_SIZE * 2);
-        blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE);
-        r = 83;
-        g = 218;
-        b = 63;
+        blocks[1] = Block(m_BlockSize * 5, m_BlockSize, m_BlockSize);
+        blocks[0] = Block(m_BlockSize * 5, m_BlockSize * 2, m_BlockSize);
+        blocks[2] = Block(m_BlockSize * 4, m_BlockSize * 2, m_BlockSize);
+        blocks[3] = Block(m_BlockSize * 6, m_BlockSize, m_BlockSize);
         break;
     case TetrominoType::Z:
-        blocks[1] = Block(BLOCK_SIZE * 5, BLOCK_SIZE);
-        blocks[0] = Block(BLOCK_SIZE * 5, BLOCK_SIZE * 2);
-        blocks[2] = Block(BLOCK_SIZE * 4, BLOCK_SIZE);
-        blocks[3] = Block(BLOCK_SIZE * 6, BLOCK_SIZE * 2);
-        r = 253;
-        g = 63;
-        b = 89;
+        blocks[1] = Block(m_BlockSize * 5, m_BlockSize, m_BlockSize);
+        blocks[0] = Block(m_BlockSize * 5, m_BlockSize * 2, m_BlockSize);
+        blocks[2] = Block(m_BlockSize * 4, m_BlockSize, m_BlockSize);
+        blocks[3] = Block(m_BlockSize * 6, m_BlockSize * 2, m_BlockSize);
         break;
     }
 
-    for (Block &block: blocks) {
-        block.SetColor(r, g, b);
+    for (Block &block : blocks)
+    {
+        block.SetColor(m_Color.r, m_Color.g, m_Color.b);
     }
 
     return blocks;
